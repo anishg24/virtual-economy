@@ -1,5 +1,6 @@
 import pickle
 import os
+from random import randrange
 from common.input_validation import get_input
 from common.list_printer import print_list
 
@@ -15,9 +16,7 @@ def create_player():
         "bank": 2500
     }
     confirm = get_input(bool, "Is this information correct?\n> ")
-    if confirm:
-        return Player(data) 
-    else:
+    if not confirm:
         while not confirm:
             a = list(data.keys())[:3]
             print_list(a)
@@ -26,17 +25,17 @@ def create_player():
                 type(data[a[x]]), f"What would you like change this to?\n> ")
             print(f"Changed your {a[x]} to {data[a[x]]}.")
             confirm = get_input(bool, "Is this information correct?\n> ")
-        return Player(data)
+    return Player(data)
 
 def read_savefile(file_name):
     try:
         with open(file_name, 'rb') as f:
-            data = pickle.load(f)
+            player = pickle.load(f)
     except FileNotFoundError:
         print("There doesn't seem to be a file to play with. Let's make one!")
         with open(create_player().file_name, 'rb') as f:
-            data = pickle.load(f)
-    return data
+            player = pickle.load(f)
+    return player
 
 class Player:
     def __init__(self, data):
@@ -52,7 +51,7 @@ class Player:
                 counter += 1
         self.file_name = self.file_name + f"-{counter}.vecon"
         with open(self.file_name, 'wb') as f:
-            pickle.dump(self.data, f)
+            pickle.dump(self, f)
         print(f"Updated \"{self.file_name}\"")
 
     def edit(self):
@@ -67,3 +66,21 @@ class Player:
             confirm = get_input(bool, "Is this information correct?\n> ")
         self.save()
     
+    def do_job(self, job):
+        if 0 < randrange(100) <= job.risk_max:
+            return job.punish_player()
+        elif self.data["age"] < job.min_age:
+            return job.messages["young"]
+        elif self.data["xp"] < job.xp_needed:
+            return job.messages["unexperienced"]
+        else:
+            money, xp = job.calculate_payouts()
+            self.data["money"] += money
+            self.data["xp"] += xp
+            return print(f"You have earned ${money} and {xp} XP")
+    
+    def quit_sequence(self):
+        with open(self.file_name, "wb") as f:
+            pickle.dump(self,f)
+        print("Thanks for playing! See you soon!")
+        quit()
