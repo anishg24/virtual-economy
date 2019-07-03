@@ -1,21 +1,27 @@
 from common.input_validation import *
 from common.list_printer import print_list
 from menu.work import work
+from menu.stats import stats
+from menu.settings import settings
+from PyInquirer import *
 
-def main_menu(player, options=["work","shop","settings","stats","quit"]):
+
+def main_menu(player, options=["work","shop","bank","settings","stats","quit"]):
     data = player.data
     name = data["name"]
-    print("\n----------------------------------------------------")
-    print_list(options, end="  ")
-    print("\n----------------------------------------------------")
-    action = get_input(list, f"\nWhat would you like to do {name.capitalize()}?", options)
-    if options[action] == "stats":
-        print("Money: $" + str(data["money"]))
-        print("Bank Amount: $" + str(data["bank"]))
-        print("Experience: " + str(data["xp"]) + " XP")
-        main_menu(player=player)
-    elif options[action] == "quit":
-        player.quit_sequence()
+    questions = [
+        {
+            "type": "list",
+            "name": "action",
+            "choices": [{"name": i.capitalize()} for i in options],
+            "message": f"What would you like to do {name.capitalize()}?"
+        }
+    ]
+    action = prompt(questions[0])["action"].lower()
+    if action == "quit":
+        player.backup()
+        print("Thanks for playing! See you soon!")
+        quit()
     else:
-        eval(f"{options[action]}(player=player)")
+        eval(f"{action}(player=player)")
  

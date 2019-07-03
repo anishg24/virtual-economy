@@ -1,4 +1,3 @@
-from common.list_printer import print_list
 from random import uniform, choice
 
 default_messages = {

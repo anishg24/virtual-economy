@@ -1,30 +1,88 @@
+from __future__ import print_function, unicode_literals
 import pickle
 import os
 from random import randrange
-from common.input_validation import get_input
-from common.list_printer import print_list
+from common.value_validator import *
+from PyInquirer import *
+
 
 os.chdir("saves/")
 
+def edit_questions(data):
+    ok = False
+    questions = [
+        {
+            "type": "list",
+            "message": "What do you want to edit?",
+            "name": "edit_choice",
+            "choices": [{"name": i.capitalize()} for i in list(data.keys())[:3]],
+            "validator": lambda answer: check_edit(answer)
+        },
+        {
+            "type": "input",
+            "message": "What do you want to change this to?",
+            "name": "changed_val"
+        },
+        {
+            "type": "confirm",
+            "name": "confirm",
+            "message": "Is this information correct?",
+            "default": True
+        },
+        {
+            "type": "input",
+            "message": "What do you want your new age to be?",
+            "name": "age",
+            "validate": lambda answer: validate_age(answer),
+            "filter": lambda answer: int(answer)
+        }
+    ]
+    while not ok:
+        x = prompt(questions[0])["edit_choice"]
+        if x == "Age":
+            data[x.lower()] = prompt(questions[3])["age"]
+        else:
+            data[x.lower()] = prompt(questions[1])["changed_val"]
+        ok = prompt(questions[2])["confirm"]
+
 def create_player():
+    questions = [
+        {
+            "type": "input",
+            "name": "name",
+            "message": "What's your name?"
+        },
+        {
+            "type": "input",
+            "name": "age",
+            "message": "What's your age?",
+            "validate": lambda answer: validate_age(answer),
+            "filter": lambda answer: int(answer)
+        },
+        {
+            "type": "input",
+            "name": "gender",
+            "message": "What's your gender?"
+        },
+        {
+            "type": "confirm",
+            "name": "confirm",
+            "message": "Is this information correct?",
+            "default": True
+        }
+    ]
+    answers = prompt(questions)
     data = {
-        "name": get_input(str, "What is your name?\n> "),
-        "age": get_input(int, "How old are you?\n> "),
-        "gender": get_input(str, "What is your gender?\n> "),
+        "name": answers["name"],
+        "age": answers["age"],
+        "gender": answers["gender"],
         "xp": 0,
         "money": 500,
         "bank": 2500
     }
-    confirm = get_input(bool, "Is this information correct?\n> ")
+    confirm = answers["confirm"]
     if not confirm:
-        while not confirm:
-            a = list(data.keys())[:3]
-            print_list(a)
-            x = get_input(list, f"\nWhat would you like to change?", a)
-            data[a[x]] = get_input(
-                type(data[a[x]]), f"What would you like change this to?\n> ")
-            print(f"Changed your {a[x]} to {data[a[x]]}.")
-            confirm = get_input(bool, "Is this information correct?\n> ")
+        edit_questions(data)
     return Player(data)
 
 def read_savefile(file_name):
@@ -55,32 +113,24 @@ class Player:
         print(f"Updated \"{self.file_name}\"")
 
     def edit(self):
-        confirm = False
-        while not confirm:
-            a = list(self.data.keys())[:3]
-            print_list(a)
-            x = get_input(list, f"\nWhat would you like to change?", a)
-            self.data[a[x]] = get_input(
-                type(self.data[a[x]]), f"What would you like change this to?\n> ")
-            print(f"Changed your {a[x]} to {self.data[a[x]]}.")
-            confirm = get_input(bool, "Is this information correct?\n> ")
+        edit_questions(self.data)
+        os.remove(self.file_name)
         self.save()
     
     def do_job(self, job):
         if 0 < randrange(100) <= job.risk_max:
             return job.punish_player()
         elif self.data["age"] < job.min_age:
-            return job.messages["young"]
+            return print(job.messages["young"])
         elif self.data["xp"] < job.xp_needed:
-            return job.messages["unexperienced"]
+            return print(job.messages["unexperienced"])
         else:
             money, xp = job.calculate_payouts()
             self.data["money"] += money
             self.data["xp"] += xp
             return print(f"You have earned ${money} and {xp} XP")
     
-    def quit_sequence(self):
+    def backup(self):
         with open(self.file_name, "wb") as f:
             pickle.dump(self,f)
-        print("Thanks for playing! See you soon!")
-        quit()
+        print("Saved your data!")
