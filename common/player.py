@@ -126,8 +126,8 @@ class Player:
             return print(job.messages["unexperienced"])
         else:
             money, xp = job.calculate_payouts()
-            self.data["money"] += money
-            self.data["xp"] += xp
+            self.data["money"] = round((self.data["money"] + money),2)
+            self.data["xp"] = round((self.data["xp"] + xp),2)
             return print(f"You have earned ${money} and {xp} XP")
     
     def backup(self):

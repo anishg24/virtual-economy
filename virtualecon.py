@@ -61,4 +61,4 @@ def play():
         main_menu(read_savefile(x))
 
 play()
-# Job("Test", (0,10),0,(0,10),(0,10),0).do_job(5)
+
