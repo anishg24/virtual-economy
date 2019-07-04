@@ -14,7 +14,7 @@ jobs_list = {
 }
 
 def work(player,jobs=list(jobs_list.keys())):
-    jobs = add_special(jobs)
+    jobs = add_back(jobs)
     job_choices = [
         {
             "type": "list",
@@ -25,9 +25,8 @@ def work(player,jobs=list(jobs_list.keys())):
     ]
     job = prompt(job_choices)["job"]
     handle_special(job, player)
-    player.do_job(jobs_list[job])
-    for _ in range(0,2):
-        del jobs[-1]
+    player.work(jobs_list[job])
+    remove_special(jobs,1)
     return menu.main_menu(player=player)
     
     

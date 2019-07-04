@@ -24,3 +24,8 @@ def handle_special(choice, player):
         player.backup()
         print("Thanks for playing! See you soon!")
         return quit()
+
+def remove_special(data, amount):
+    for _ in range(0,amount):
+        del data[-1]
+    return data

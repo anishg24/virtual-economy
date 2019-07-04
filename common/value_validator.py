@@ -23,5 +23,15 @@ def validate_age(answer):
             cursor_position=len(answer)
         )
 
+def validate_amount(answer):
+    if check_int(answer):
+        int_answer = int(answer)
+        return True
+    else:
+        raise ValidationError(
+            message="Please enter a number!",
+            cursor_position=len(answer)
+        )
+
 def get_int(answer):
     return int(answer)

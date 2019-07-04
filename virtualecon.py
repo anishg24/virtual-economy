@@ -11,19 +11,21 @@
 # /_____/\___/\____/_/ /_/\____/_/ /_/ /_/\__, /  
 #                                        /____/   
 #
-# Description: Command line game designed to mimic an aspect of life. You can work and buy things, simply by using arrow keys
-#              and such. Try to reach as high as possible. You can also use your file and share with your friends (located in ./saves/)
+# Description: Command line game designed to mimic an aspect of life. You can work and buy things, simply by using arrow and enter keys.
+#              Try to make as much money as possible. You can also use your save file and share with your friends (located in ./saves/)
+#              To start playing, run "python virtualecon.py" within the virtual-economy directory.
 # Author: Anish Govind
-# Version: 0.0.5 (Beta)
+# Version: 0.0.6 (Beta Release)
 # Dependencies: PyInquirer, PyFiglet, PrettyTable, Random, Pickle
 # GitHub: https://github.com/generaldefence
 #
 # TO-DO:
-#   - Finish shop options
+#   - Finish banking system
 #   - Finish main menu
+#   - Finish punishment system
 # IDEAS:
 #   - Stocks
-#   - Limit to # of jobs worked in 1 day
+#   - Items give special bonuses upon use
 
 
 import os
@@ -37,7 +39,6 @@ from pyfiglet import Figlet
 
 f = Figlet(font='slant')
 print(f.renderText('Virtual Economy'))
-
 
 def play():
     saves = os.listdir()

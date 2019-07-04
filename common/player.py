@@ -1,6 +1,7 @@
 from __future__ import print_function, unicode_literals
 import pickle
 import os
+import time
 from random import randrange
 from common.value_validator import *
 from PyInquirer import *
@@ -78,7 +79,13 @@ def create_player():
         "gender": answers["gender"],
         "xp": 0,
         "money": 500,
-        "bank": 2500
+        "bank_account": 0,
+        "bank": "",
+        "jobs_worked": 0,
+        "inventory": {},
+        "days": 0,
+        "jobs_today": 0,
+        "job_daily_max": 3
     }
     confirm = answers["confirm"]
     if not confirm:
@@ -117,8 +124,10 @@ class Player:
         os.remove(self.file_name)
         self.save()
     
-    def do_job(self, job):
-        if 0 < randrange(100) <= job.risk_max:
+    def work(self, job):
+        if self.data["jobs_today"] >= self.data["job_daily_max"]:
+            return print("You are too exhausted to work again today!")
+        elif 0 < randrange(100) <= job.risk_max:
             return job.punish_player()
         elif self.data["age"] < job.min_age:
             return print(job.messages["young"])
@@ -128,9 +137,49 @@ class Player:
             money, xp = job.calculate_payouts()
             self.data["money"] = round((self.data["money"] + money),2)
             self.data["xp"] = round((self.data["xp"] + xp),2)
-            return print(f"You have earned ${money} and {xp} XP")
+            self.data["jobs_worked"] += 1
+            self.data["jobs_today"] += 1
+            jt = self.data["jobs_today"]
+            jm = self.data["job_daily_max"]
+            return print(f"You have earned ${money} and {xp} XP!\nYou can work {jm-jt} more times today!")
     
     def backup(self):
         with open(self.file_name, "wb") as f:
             pickle.dump(self,f)
         print("Saved your data!")
+    
+    def buy(self, item, amount):
+        cost = amount * item.cost
+        if self.data["age"] < item.min_age:
+            return print("You are too young to buy this item!")
+        elif self.data["money"] > cost:
+            return print("You don't have enough money for this item!")
+        else:
+            self.data["money"] = round(self.data["money"]-cost,2)
+            try:
+                # {item.name: [count, [items]]}
+                self.data["inventory"][item.name][0] += amount
+                self.data["inventory"][item.name][1].append(item)
+            except KeyError:
+                self.data["inventory"][item.name] = [amount,[item]]
+            return print(f"You have bought {amount}x \"{item.name}\" for ${cost}!")
+    
+    def next_day(self):
+        self.data["days"] += 1
+        if self.data["days"] >= 365:
+            self.data["age"] += 1
+            self.data["money"] += 50
+            self.data["xp"] += 10
+            print("Happy Birthday!\nYou have gained $50 and 10 XP")
+        time.sleep(3)
+        self.data["jobs_today"] = 0 
+        print("It is a new day and you feel relaxed! Get to working!")
+    
+    def join_bank(self, bank):
+        pass
+
+    def change_bank(self, new_bank):
+        pass
+    
+    def deposit(self):
+        pass
