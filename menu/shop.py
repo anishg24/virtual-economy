@@ -11,9 +11,11 @@ class Item:
         self.on_use_function = on_use_function
 
 pizza = Item("Pizza", 3, 0)
+water = Item("Water", 3, 0)
 
 item_dict = {
-    f"{pizza.name} (${pizza.cost})": pizza
+    f"{pizza.name} (${pizza.cost})": pizza,
+    f"{water.name} (${water.cost})": water
 }
 
 def shop(player, items=list(item_dict.keys())):
@@ -23,7 +25,7 @@ def shop(player, items=list(item_dict.keys())):
             "type": "list",
             "name": "item",
             "choices": [{"name": i} for i in items],
-            "message": "What job would you like to take on?"
+            "message": "What would you like to buy?"
         },
         {
             "type": "input",

@@ -5,9 +5,12 @@ import time
 from random import randrange
 from common.value_validator import *
 from PyInquirer import *
-
+from colorama import init
+from termcolor import colored
+init()
 
 os.chdir("saves/")
+
 
 def edit_questions(data):
     ok = False
@@ -46,6 +49,7 @@ def edit_questions(data):
             data[x.lower()] = prompt(questions[1])["changed_val"]
         ok = prompt(questions[2])["confirm"]
 
+
 def create_player():
     questions = [
         {
@@ -80,17 +84,18 @@ def create_player():
         "xp": 0,
         "money": 500,
         "bank_account": 0,
-        "bank": "",
+        "bank": None,
         "jobs_worked": 0,
         "inventory": {},
-        "days": 0,
-        "jobs_today": 0,
-        "job_daily_max": 3
+        "years": 0,
+        "months": 0,
+        "monthly_jobs": 5,
     }
     confirm = answers["confirm"]
     if not confirm:
         edit_questions(data)
     return Player(data)
+
 
 def read_savefile(file_name):
     try:
@@ -102,14 +107,17 @@ def read_savefile(file_name):
             player = pickle.load(f)
     return player
 
+
 class Player:
     def __init__(self, data):
         self.data = data
+        self.max_jobs = 5
         self.save()
 
     def save(self):
         counter = 0
-        self.file_name = self.data["name"].lower().split()[0] + str(self.data["age"])
+        self.file_name = self.data["name"].lower().split()[
+            0] + str(self.data["age"])
         items = os.listdir()
         for i in items:
             if i.split("-")[0] == self.file_name:
@@ -117,69 +125,100 @@ class Player:
         self.file_name = self.file_name + f"-{counter}.vecon"
         with open(self.file_name, 'wb') as f:
             pickle.dump(self, f)
-        print(f"Updated \"{self.file_name}\"")
+        print(colored(f"Updated \"{self.file_name}\"","cyan"))
 
     def edit(self):
         edit_questions(self.data)
         os.remove(self.file_name)
         self.save()
-    
+
     def work(self, job):
-        if self.data["jobs_today"] >= self.data["job_daily_max"]:
-            return print("You are too exhausted to work again today!")
-        elif 0 < randrange(100) <= job.risk_max:
+        if 0 < randrange(100) <= job.risk_max:
             return job.punish_player()
         elif self.data["age"] < job.min_age:
-            return print(job.messages["young"])
+            return print(colored(job.messages["young"],"red"))
         elif self.data["xp"] < job.xp_needed:
-            return print(job.messages["unexperienced"])
+            return print(colored(job.messages["unexperienced"],"red"))
         else:
             money, xp = job.calculate_payouts()
-            self.data["money"] = round((self.data["money"] + money),2)
-            self.data["xp"] = round((self.data["xp"] + xp),2)
             self.data["jobs_worked"] += 1
-            self.data["jobs_today"] += 1
-            jt = self.data["jobs_today"]
-            jm = self.data["job_daily_max"]
-            return print(f"You have earned ${money} and {xp} XP!\nYou can work {jm-jt} more times today!")
-    
+            self.data["monthly_jobs"] -= 1
+            self.data["money"] = round((self.data["money"] + money), 2)
+            self.data["xp"] = round((self.data["xp"] + xp), 2)
+            x = self.data["monthly_jobs"]
+            print(colored("You have earned","cyan") + colored(' $'+str(money), 'green') + colored(" and ", "cyan") 
+            + colored(str(xp)+'XP','green'))
+            print(colored("You can work ","cyan") + colored(x,'yellow') + colored(" more times this month!","cyan"))
+
     def backup(self):
         with open(self.file_name, "wb") as f:
-            pickle.dump(self,f)
-        print("Saved your data!")
-    
+            pickle.dump(self, f)
+        print(colored("Saved your data!","green"))
+
     def buy(self, item, amount):
         cost = amount * item.cost
         if self.data["age"] < item.min_age:
-            return print("You are too young to buy this item!")
-        elif self.data["money"] > cost:
-            return print("You don't have enough money for this item!")
+            return print(colored("You are too young to buy this item!","red"))
+        elif self.data["money"] < cost:
+            return print(colored("You don't have enough money for this item!","red"))
         else:
-            self.data["money"] = round(self.data["money"]-cost,2)
+            self.data["money"] = round(self.data["money"]-cost, 2)
+            self.data["money"] = round(self.data["money"])
             try:
                 # {item.name: [count, [items]]}
                 self.data["inventory"][item.name][0] += amount
                 self.data["inventory"][item.name][1].append(item)
             except KeyError:
-                self.data["inventory"][item.name] = [amount,[item]]
-            return print(f"You have bought {amount}x \"{item.name}\" for ${cost}!")
-    
-    def next_day(self):
-        self.data["days"] += 1
-        if self.data["days"] >= 365:
+                self.data["inventory"][item.name] = [amount, [item]]
+            return print(colored("You have bought ","cyan")+colored(str(amount)+f"x {item.name}","yellow") + colored(" for ","cyan") + colored("$"+str(cost)+"!","green"))
+
+    def next_month(self):
+        self.data["months"] += 1
+        if self.data["months"] == 12:
             self.data["age"] += 1
             self.data["money"] += 50
             self.data["xp"] += 10
-            print("Happy Birthday!\nYou have gained $50 and 10 XP")
-        time.sleep(3)
-        self.data["jobs_today"] = 0 
-        print("It is a new day and you feel relaxed! Get to working!")
-    
+            print(colored("Happy Birthday!","magenta",attrs=["blink"]))
+            print(colored("You have gained ","cyan")+colored("$50","green")+colored(" and ","cyan")+colored("10 XP","green"))
+            self.data["months"] = 0
+            self.data["years"] += 1
+        # time.sleep(3)
+        self.data["monthly_jobs"] = self.max_jobs
+        print(colored("It is a new month and you feel relaxed! Get to working!","cyan"))
+        if self.data["bank"]:
+            self.data["bank_account"] *= 1 + (self.data["bank"].interest_rate/100)
+            self.data["bank_account"] = round(self.data["bank_account"],2)
+            print(colored("Your bank account has collected interest! You have a total of ","cyan") +
+                  colored("$"+str(self.data["bank_account"]),"green")+colored(" in your bank account","cyan"))
+
     def join_bank(self, bank):
-        pass
+        if self.data["xp"] < bank.min_xp:
+            return print(colored(f"You are too unexperienced to join {bank.name}!","red"))
+        elif self.data["money"] < bank.initial_deposit:
+            return print(colored(f"You don't have enough money to make an initial deposit of {bank.initial_deposit}!", "red"))
+        else:
+            self.data["bank"] = bank
+            self.data["bank_account"] = bank.initial_deposit
+            self.data["money"] -= bank.initial_deposit
+            return print(colored("You joined ","cyan")+colored(bank.name,"yellow")+colored(" and deposited ", "cyan") + colored(f"${bank.initial_deposit}","red") + colored("!","cyan"))
 
     def change_bank(self, new_bank):
         pass
-    
-    def deposit(self):
-        pass
+
+    def deposit(self, amount):
+        if self.data["money"] >= amount:
+            self.data["money"] -= amount
+            self.data["bank_account"] += amount
+            map(lambda x: round(x,2), [self.data["bank_account"], self.data["money"]])
+            print(colored("You succesfully deposited ","cyan") + colored(f"${amount}!","green"))
+        else:
+            print(colored("You don't have enough money!", "red"))
+
+    def withdraw(self, amount):
+        if self.data["bank_account"] >= amount:
+            self.data["bank_account"] -= amount
+            self.data["money"] += amount
+            map(lambda x: round(x,2), [self.data["bank_account"], self.data["money"]])
+            print(colored("You successfully withdrew ", "cyan") + colored(f"${amount}!","green"))
+        else:
+            print(colored("You don't have enough money in your bank!", "red"))

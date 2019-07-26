@@ -5,15 +5,19 @@ from PyInquirer import *
 
 # Job(self, name, payout_range, xp_needed, min_age, xp_range, risk_max, message=default_messages)
 
-allowance = Job("Allowance",(0,10),0,0,(0,1),0)
-chores = Job("Chores",(5,10),3,0,(1,2),0)
+allowance = Job("Allowance", (0, 10), 0, 0, (0, 1), 0)
+chores = Job("Chores", (5, 10), 3, 0, (1, 2), 0)
 
 jobs_list = {
     allowance.name: allowance,
-    chores.name : chores
+    chores.name: chores
 }
 
-def work(player,jobs=list(jobs_list.keys())):
+
+def work(player, jobs=list(jobs_list.keys())):
+    if not player.data["monthly_jobs"]:
+        print("You have worked too much this month!")
+        return menu.main_menu(player=player)
     jobs = add_back(jobs)
     job_choices = [
         {
@@ -26,8 +30,5 @@ def work(player,jobs=list(jobs_list.keys())):
     job = prompt(job_choices)["job"]
     handle_special(job, player)
     player.work(jobs_list[job])
-    remove_special(jobs,1)
+    remove_special(jobs, 1)
     return menu.main_menu(player=player)
-    
-    
-    

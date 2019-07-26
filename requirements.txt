@@ -1,0 +1,6 @@
+PyInquirer
+PyFiglet
+PrettyTable
+colorama
+termcolor
+prompt_toolkit==1.0.14
