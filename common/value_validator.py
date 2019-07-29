@@ -49,7 +49,7 @@ def validate_balance(player, answer, deposit=True):
             raise ValidationError(
                 message=f"You aren't allowed to {'deposit' if deposit else 'withdraw'} $0!"
             )
-        if deposit:
+        elif deposit:
             if money >= float_answer:
                 return True
             else:

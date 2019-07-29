@@ -182,7 +182,7 @@ class Player:
             print(colored("You have gained ","cyan")+colored("$50","green")+colored(" and ","cyan")+colored("10 XP","green"))
             self.data["months"] = 0
             self.data["years"] += 1
-        # time.sleep(3)
+        time.sleep(3)
         self.data["monthly_jobs"] = self.max_jobs
         print(colored("It is a new month and you feel relaxed! Get to working!","cyan"))
         if self.data["bank"]:
